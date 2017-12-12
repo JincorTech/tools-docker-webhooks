@@ -105,6 +105,7 @@ var (
 	listenPort                           uint
 	listenIp, configFile                 string
 	basicAuthUsername, basicAuthPassword string
+	basicAuthFile                        string
 )
 
 func main() {
@@ -114,8 +115,21 @@ func main() {
 	flag.StringVar(&configFile, "config", "config.json", "Repository")
 	flag.StringVar(&basicAuthUsername, "http-auth-user", "user", "Http Basic Auth username")
 	flag.StringVar(&basicAuthPassword, "http-auth-pass", "pass", "Http Basic Auth password")
+	flag.StringVar(&basicAuthFile, "http-auth-file", "", "Http Basic Auth credentials file (like 'username:password' no LR, CR, etc)")
 
 	flag.Parse()
+
+	if len(basicAuthFile) > 0 {
+		if credFileBody, err := ioutil.ReadFile(basicAuthFile); err == nil {
+			splittedItems := strings.Split(string(credFileBody), ":")
+			if len(splittedItems) != 2 {
+				log.Fatalf("Invalid credential file format")
+			}
+			basicAuthUsername, basicAuthPassword = splittedItems[0], splittedItems[1]
+		} else {
+			log.Fatalf("Can't read credential file %s", err)
+		}
+	}
 
 	if configFileBody, err := ioutil.ReadFile(configFile); err == nil {
 		err = json.Unmarshal(configFileBody, &repoCommands)

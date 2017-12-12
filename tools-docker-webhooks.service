@@ -1,0 +1,20 @@
+[Unit]
+Description=Docker Hub Webhook Processor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/tools-docker-webhooks --listen-port 58732 --config /usr/local/etc/tools-docker-webhooks/config.json --http-auth-file=/usr/local/etc/tools-docker-webhooks/http_auth_cred.data
+ExecReload=/bin/kill -s HUP $MAINPID
+TimeoutStartSec=0
+Delegate=yes
+KillMode=process
+Restart=on-failure
+StartLimitBurst=3
+StartLimitInterval=30s
+User=maintainer
+Group=maintainer
+
+[Install]
+WantedBy=multi-user.target
