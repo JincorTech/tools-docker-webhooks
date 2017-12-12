@@ -1,0 +1,22 @@
+{
+    "jincort/backend-companies": [
+        "echo",
+            "RepoUrl: ${repository.repo_url}",
+            "RepoName: ${repository.repo_name}",
+            "Name: ${repository.name}",
+            "Namespace: ${repository.namespace}",
+            "Owner: ${repository.owner}",
+            "Tag: ${push_data.tag}",
+            "Pusher: ${push_data.pusher}"
+    ],
+    "jincort/backend-wallets": [
+        "echo",
+            "RepoUrl: ${repository.repo_url}",
+            "RepoName: ${repository.repo_name}",
+            "Name: ${repository.name}",
+            "Namespace: ${repository.namespace}",
+            "Owner: ${repository.owner}",
+            "Tag: ${push_data.tag}",
+            "Pusher: ${push_data.pusher}"
+    ]
+}
