@@ -1,5 +1,5 @@
 {
-    "jincort/backend-companies": [
+    "jincort/backend-company": [
         "echo",
             "RepoUrl: ${repository.repo_url}",
             "RepoName: ${repository.repo_name}",

@@ -52,9 +52,6 @@ func DockerHubHandler(res http.ResponseWriter, req *http.Request) {
 
 	if username, password, ok := req.BasicAuth(); ok && username == basicAuthUsername && password == basicAuthPassword {
 		notAuthorized = false
-	} else {
-		log.Printf("%v %v %v", username, password, ok)
-
 	}
 
 	if notAuthorized {
@@ -190,6 +187,7 @@ func main() {
 
 	log.Println("Point your Hook config at: http://{IP+Port}/autodock/v1/")
 
+	http.HandleFunc("/autodock/v1", DockerHubHandler)
 	http.HandleFunc("/autodock/v1/", DockerHubHandler)
-	http.ListenAndServe(fmt.Sprintf("%s:%d", listenIp, listenPort), nil)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%d", listenIp, listenPort), nil))
 }
