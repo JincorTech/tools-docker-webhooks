@@ -15,6 +15,22 @@ import (
 	"github.com/Workiva/go-datastructures/queue"
 )
 
+type empty struct{}
+type semaphore chan empty
+
+func (s semaphore) enter(n int) {
+	e := empty{}
+	for i := 0; i < n; i++ {
+		s <- e
+	}
+}
+
+func (s semaphore) leave(n int) {
+	for i := 0; i < n; i++ {
+		<-s
+	}
+}
+
 var repoCommands = make(map[string][]string)
 var dispatcherQueues = make(map[string]*queue.Queue)
 
@@ -99,6 +115,7 @@ func DispatchJob(job JobContext) {
 }
 
 var (
+	workers                              uint
 	listenPort                           uint
 	listenIp, configFile                 string
 	basicAuthUsername, basicAuthPassword string
@@ -107,6 +124,8 @@ var (
 
 func main() {
 
+
+	flag.UintVar(&workers, "workers", 2, "Workers count")
 	flag.UintVar(&listenPort, "listen-port", 8080, "Listen Port")
 	flag.StringVar(&listenIp, "listen-ip", "0.0.0.0", "Listen IP")
 	flag.StringVar(&configFile, "config", "config.json", "Repository")
@@ -141,12 +160,17 @@ func main() {
 		log.Fatalf("No repositories configured")
 	}
 
+	var workerLimiter = make(semaphore, workers)
+
 	for repName := range repoCommands {
-		dispatcherQueues[repName] = queue.New(16)
+		dispatcherQueues[repName] = queue.New(1)
 
 		go func(q *queue.Queue) {
 			for {
+
 				jobs, err := q.Get(1)
+				workerLimiter.enter(1)
+
 				job := jobs[0].(JobContext)
 
 				repName := job.Payload.Repository.RepoName
@@ -176,13 +200,15 @@ func main() {
 				log.Printf("Output: %s %s %s", repName, job.Command, output)
 
 				time.Sleep(time.Second)
+
+				workerLimiter.leave(1)
 			}
 		}(dispatcherQueues[repName])
 	}
 
-	log.Println("Docker repository actions:")
-	for repo, commands := range repoCommands {
-		log.Printf("\t%s: %s\n", repo, commands)
+	log.Println("Docker repository listeners:")
+	for repo, _ := range repoCommands {
+		log.Printf("\t%s\n", repo)
 	}
 
 	log.Println("Point your Hook config at: http://{IP+Port}/autodock/v1/")
